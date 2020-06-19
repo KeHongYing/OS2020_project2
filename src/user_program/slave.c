@@ -38,8 +38,8 @@ int main (int argc, char** argv)
 	for(int n = 0; n < file_num; n ++){
 		char file_name[50];
 		char buf[BUF_SIZE];
-		int file_fd;// the fd for the device and the fd for the input file
-		size_t ret, file_size = 0, data_size = 0;
+		int ret, file_fd;// the fd for the device and the fd for the input file
+		size_t file_size = 0, data_size = 0;
 		struct timeval start;
 		struct timeval end;
 
@@ -70,28 +70,31 @@ int main (int argc, char** argv)
 					write(file_fd, buf, ret); //write to the input file
 					file_size += ret;
 				} while(ret > 0);
-				printf("%d finish\n", n);
+				//printf("%d finish\n", n);
 				break;
 			case 'm':
 				while(1){
-					ret = ioctl(dev_fd, sizeof(buf));
+					ret = ioctl(dev_fd, IOCTL_MMAP);
+					printf("%d\n", ret);
 					if(ret < 0){
 						perror("slave ioctl mmap failed\n");
-						return 1;
+						return 2;
 					}else if( ret == 0 ){
 						file_size = data_size;
 						break;
 					}
 					
+					printf("ERROR!!!%d\n", ret);
 					posix_fallocate(file_fd, data_size, ret);
 					file_address = mmap(NULL, ret, PROT_WRITE, MAP_SHARED, file_fd, data_size);
 					kernel_address = mmap(NULL, ret, PROT_READ, MAP_SHARED, dev_fd, 0);
 					memcpy(file_address, kernel_address, ret);
 					data_size += ret;
+					munmap(file_address, ret);
+					munmap(kernel_address, ret);
 				}
 				break;
 		}
-		puts("fuck");
 
 		if(ioctl(dev_fd, IOCTL_PRINT) == -1){
 			perror("slave ioctl print page decriptor failed");

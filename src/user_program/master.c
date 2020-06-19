@@ -73,8 +73,8 @@ int main (int argc, char* argv[])
 				{
 					ret = read(file_fd, buf, sizeof(buf)); // read from the input file
 					write(dev_fd, buf, ret);//write to the the device
+					puts(buf);
 				}while(ret > 0);
-				puts(buf);
 				break;
 
 			case 'm': //mmap
@@ -93,8 +93,8 @@ int main (int argc, char* argv[])
 						return 1;
 					}
 
-					munmap(file_address, MMAP_SIZE);
-					munmap(kernel_address, MMAP_SIZE);
+					munmap(file_address, len);
+					munmap(kernel_address, len);
 				}
 				
 				ioctl(dev_fd, IOCTL_OTHER, (unsigned long)file_address);
