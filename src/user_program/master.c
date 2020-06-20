@@ -68,12 +68,12 @@ int main (int argc, char* argv[])
 		switch(method[0])
 		{
 			case 'f': //fcntl : read()/write()
-				fprintf(stderr, "in switch f\n");
+				//fprintf(stderr, "in switch f\n");
 				do
 				{
 					ret = read(file_fd, buf, sizeof(buf)); // read from the input file
 					write(dev_fd, buf, ret);//write to the the device
-					fprintf(stderr, buf);
+					//fprintf(stderr, buf);
 				}while(ret > 0);
 				break;
 

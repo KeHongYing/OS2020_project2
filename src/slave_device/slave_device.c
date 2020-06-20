@@ -213,7 +213,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			printk("slave device ioctl mmap");
 
 			while(1){
-				len = krecv(sockfd_cli, buf, sizeof(buf), 0);
+				len = krecv(sockfd_cli, buf, sizeof(buf), MSG_WAITALL);
 				if(len == 0)	
 					break;
 				memcpy(file -> private_data + data_size, buf, len);

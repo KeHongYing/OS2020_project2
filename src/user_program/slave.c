@@ -17,7 +17,7 @@
 #define IOCTL_MMAP 0x12345678
 #define IOCTL_PRINT 0x66254114
 
-int main (int argc, char** argv)
+int main(int argc, char** argv)
 {
 	char method[20];
 	char ip[20];
