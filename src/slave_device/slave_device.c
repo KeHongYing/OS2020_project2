@@ -210,9 +210,21 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			ret = 0;
 			break;
 		case slave_IOCTL_MMAP:
+			printk("slave device ioctl mmap");
 
+			while(1){
+				len = krecv(sockfd_cli, buf, sizeof(buf), 0);
+				if(len == 0)	
+					break;
+				memcpy(file -> private_data + data_size, buf, len);
+				data_size += len;
+				if(data_size >= MMAP_SIZE){
+					break;
+				}
+			}
+
+			ret = data_size;
 			break;
-
 		case slave_IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{

@@ -15,7 +15,7 @@ __attribute__((section(".gnu.linkonce.this_module"))) = {
 	.arch = MODULE_ARCH_INIT,
 };
 
-#ifdef RETPOLINE
+#ifdef CONFIG_RETPOLINE
 MODULE_INFO(retpoline, "Y");
 #endif
 
@@ -24,5 +24,3 @@ __used
 __attribute__((section(".modinfo"))) =
 "depends=ksocket";
 
-
-MODULE_INFO(srcversion, "365D5F60A38BEC87E03A1F2");
