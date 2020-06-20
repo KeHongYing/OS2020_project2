@@ -10,12 +10,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define PAGE_SIZE 4096
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
-
-#define IOCTL_MMAP 0x12345678
-#define IOCTL_PRINT 0x66254114
+#include "../define.h"
 
 int main(int argc, char** argv)
 {
@@ -25,6 +20,8 @@ int main(int argc, char** argv)
 	char *kernel_address, *file_address;
 	int file_num = atoi(argv[1]);
 	int dev_fd;
+	struct timeval start, end;
+	int total_size = 0;
 	
 	strcpy(method, argv[argc - 2]);
 	strcpy(ip, argv[argc - 1]);
@@ -35,24 +32,22 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	gettimeofday(&start ,NULL);
 	for(int n = 0; n < file_num; n ++){
 		char file_name[50];
 		char buf[BUF_SIZE];
 		int ret, file_fd;// the fd for the device and the fd for the input file
 		size_t file_size = 0, data_size = 0;
-		struct timeval start;
-		struct timeval end;
 
 		strcpy(file_name, argv[n + 2]);
 
-		gettimeofday(&start ,NULL);
 		if((file_fd = open (file_name, O_RDWR | O_CREAT | O_TRUNC)) < 0)
 		{
 			perror("failed to open input file\n");
 			return 1;
 		}
 
-		if(ioctl(dev_fd, 0x12345677, ip) == -1)	//0x12345677 : connect to master in the device
+		if(ioctl(dev_fd, IOCTL_CREATESOCK, ip) == -1)	//IOCTL_CREATESOCK : connect to master in the device
 		{
 			perror("ioclt create slave socket error\n");
 			return 1;
@@ -91,25 +86,25 @@ int main(int argc, char** argv)
 					munmap(file_address, ret);
 					munmap(kernel_address, ret);
 				}
-				if(ioctl(dev_fd, IOCTL_PRINT, kernel_address) == -1){
+				if(ioctl(dev_fd, IOCTL_DEFAULT, kernel_address) == -1){
 					perror("slave ioctl print page decriptor failed");
 					return 1;
 				}
 				break;
 		}
 
-		if(ioctl(dev_fd, 0x12345679) == -1)// end receiving data, close the connection
+		if(ioctl(dev_fd, IOCTL_EXIT) == -1)// end receiving data, close the connection
 		{
 			perror("ioclt client exits error\n");
 			return 1;
 		}
-		gettimeofday(&end, NULL);
-		trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.0001;
-		printf("Transmission time: %lf ms, File size: %d bytes\n", trans_time, file_size);
 		
 		close(file_fd);
-
+		total_size += (int)file_size;
 	}
+	gettimeofday(&end, NULL);
+	trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.0001;
+	printf("Transmission time: %lf ms, File size: %d bytes\n", trans_time, total_size);
 	close(dev_fd);
 	return 0;
 }

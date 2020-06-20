@@ -21,16 +21,7 @@
 #include <asm/page.h>
 #include <asm/pgtable.h>
 
-#ifndef VM_RESERVED
-#define VM_RESERVED   (VM_DONTEXPAND | VM_DONTDUMP)
-#endif
-
-#define DEFAULT_PORT 2325
-#define master_IOCTL_CREATESOCK 0x12345677
-#define master_IOCTL_MMAP 0x12345678
-#define master_IOCTL_EXIT 0x12345679
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
+#include "../define.h"
 
 typedef struct socket * ksocket_t;
 
@@ -189,7 +180,6 @@ int master_open(struct inode *inode, struct file *filp)
 static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
 	long ret = -EINVAL;
-	size_t data_size = 0, offset = 0;
 	char *tmp;
 	pgd_t *pgd;
 	p4d_t *p4d;
@@ -199,7 +189,7 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
 	switch(ioctl_num){
-		case master_IOCTL_CREATESOCK:// create socket and accept a connection
+		case IOCTL_CREATESOCK:// create socket and accept a connection
 			sockfd_cli = kaccept(sockfd_srv, (struct sockaddr *)&addr_cli, &addr_len);
 			if (sockfd_cli == NULL)
 			{
@@ -214,11 +204,11 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			kfree(tmp);
 			ret = 0;
 			break;
-		case master_IOCTL_MMAP:
+		case IOCTL_MMAP:
 			ksend(sockfd_cli, file->private_data, ioctl_param, 0);
 			ret = 0;
 			break;
-		case master_IOCTL_EXIT:
+		case IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
 				printk("kclose cli error\n");

@@ -10,14 +10,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define PAGE_SIZE 4096
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
-
-#define IOCTL_CREATESOCK 0x12345677
-#define IOCTL_MMAP 0x12345678
-#define IOCTL_EXIT 0x12345679
-#define IOCTL_OTHER 0x12345680
+#include "../define.h"
 
 size_t get_filesize(const char* filename);//get the size of the input file
 
@@ -32,6 +25,7 @@ int main (int argc, char* argv[])
 	struct timeval end;
 	double trans_time; //calulate the time between the device is opened and it is closed
 	int n = atoi(argv[1]);
+	int total_size = 0;
 	
 	strcpy(method, argv[argc - 1]);
 
@@ -41,11 +35,11 @@ int main (int argc, char* argv[])
 		return 1;
 	}
 
+	gettimeofday(&start ,NULL);
 	for(int i = 0; i < n; i++) {
 	
 		offset = 0;
 		strcpy(file_name, argv[2 + i]);
-		gettimeofday(&start ,NULL);
 		
 		if( (file_fd = open (file_name, O_RDWR)) < 0 )
 		{
@@ -97,23 +91,22 @@ int main (int argc, char* argv[])
 					munmap(kernel_address, len);
 				}
 				
-				ioctl(dev_fd, IOCTL_OTHER, (unsigned long)file_address);
+				ioctl(dev_fd, IOCTL_DEFAULT, (unsigned long)file_address);
 				break;
 		}
 
-		if(ioctl(dev_fd, IOCTL_EXIT ) == -1) // end sending data, close the connection
+		if(ioctl(dev_fd, IOCTL_EXIT) == -1) // end sending data, close the connection
 		{
 			perror("ioclt server exits error\n");
 			return 1;
 		}
 		
-		gettimeofday(&end, NULL);
-		trans_time = (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)*0.0001;
-		printf("Transmission time: %lf ms, File size: %d bytes\n", trans_time, file_size);
-
 		close(file_fd);
-	
+		total_size += (int)file_size;
 	}
+	gettimeofday(&end, NULL);
+	trans_time = (end.tv_sec - start.tv_sec)*1000 + (end.tv_usec - start.tv_usec)*0.0001;
+	printf("Transmission time: %lf ms, File size: %d bytes\n", trans_time, total_size);
 	
 	close(dev_fd);
 

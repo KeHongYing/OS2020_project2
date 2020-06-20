@@ -20,17 +20,7 @@
 #include <linux/mm.h>
 #include <asm/page.h>
 
-#ifndef VM_RESERVED
-#define VM_RESERVED   (VM_DONTEXPAND | VM_DONTDUMP)
-#endif
-
-#define slave_IOCTL_CREATESOCK 0x12345677
-#define slave_IOCTL_MMAP 0x12345678
-#define slave_IOCTL_EXIT 0x12345679
-
-
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
+#include "../define.h"
 
 struct dentry  *file1;//debug file
 
@@ -160,11 +150,8 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 	long ret = -EINVAL;
 
 	int addr_len ;
-	unsigned int i;
 	size_t len, data_size = 0;
 	char *tmp, ip[20], buf[BUF_SIZE];
-	struct page *p_print;
-	unsigned char *px;
 
     pgd_t *pgd;
 	p4d_t *p4d;
@@ -177,7 +164,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
     printk("slave device ioctl");
 
 	switch(ioctl_num){
-		case slave_IOCTL_CREATESOCK:// create socket and connect to master
+		case IOCTL_CREATESOCK:// create socket and connect to master
             printk("slave device ioctl create socket");
 
 			if(copy_from_user(ip, (char*)ioctl_param, sizeof(ip)))
@@ -209,7 +196,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			printk("kfree(tmp)");
 			ret = 0;
 			break;
-		case slave_IOCTL_MMAP:
+		case IOCTL_MMAP:
 			printk("slave device ioctl mmap");
 
 			while(1){
@@ -225,7 +212,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 
 			ret = data_size;
 			break;
-		case slave_IOCTL_EXIT:
+		case IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
 				printk("kclose cli error\n");
