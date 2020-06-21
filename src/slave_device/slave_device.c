@@ -39,6 +39,7 @@ typedef struct socket * ksocket_t;
 //functions about kscoket are exported,and thus we use extern here
 extern ksocket_t ksocket(int domain, int type, int protocol);
 extern int kconnect(ksocket_t socket, struct sockaddr *address, int address_len);
+extern ssize_t ksend(ksocket_t socket, const void *buffer, size_t length, int flags);
 extern ssize_t krecv(ksocket_t socket, void *buffer, size_t length, int flags);
 extern int kclose(ksocket_t socket);
 extern unsigned int inet_addr(char* ip);
@@ -50,6 +51,7 @@ static void __exit slave_exit(void);
 int slave_close(struct inode *inode, struct file *filp);
 int slave_open(struct inode *inode, struct file *filp);
 static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param);
+static ssize_t send_msg(struct file *file, const char __user *buf, size_t count, loff_t *data);//use when user is writing to this device
 ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp );
 
 static mm_segment_t old_fs;
@@ -106,6 +108,7 @@ static struct file_operations slave_fops = {
 	.owner = THIS_MODULE,
 	.unlocked_ioctl = slave_ioctl,
 	.open = slave_open,
+	.write = send_msg,
 	.read = receive_msg,
 	.release = slave_close,
 	.mmap = my_mmap
@@ -160,11 +163,8 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 	long ret = -EINVAL;
 
 	int addr_len ;
-	unsigned int i;
 	size_t len, data_size = 0;
 	char *tmp, ip[20], buf[BUF_SIZE];
-	struct page *p_print;
-	unsigned char *px;
 
     pgd_t *pgd;
 	p4d_t *p4d;
@@ -211,14 +211,17 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			break;
 		case slave_IOCTL_MMAP:
 			printk("slave device ioctl mmap");
+			size_t remain_size = ioctl_param;
 
 			while(1){
-				len = krecv(sockfd_cli, buf, sizeof(buf), MSG_WAITALL);
-				if(len == 0)	
+				if(ioctl_param <= 0)
 					break;
+				len = krecv(sockfd_cli, buf, remain_size < sizeof(buf) ? remain_size : sizeof(buf), MSG_WAITALL);
 				memcpy(file -> private_data + data_size, buf, len);
 				data_size += len;
-				if(data_size >= MMAP_SIZE){
+				remain_size -= len;
+				printk("data_size %d\n", data_size);
+				if(remain_size <= 0){
 					break;
 				}
 			}
@@ -240,13 +243,25 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			pmd = pmd_offset(pud, ioctl_param);
 			ptep = pte_offset_kernel(pmd , ioctl_param);
 			pte = *ptep;
-			printk("slave: %lX\n", pte);
+			printk("slave: %llu\n", pte);
 			ret = 0;
 			break;
 	}
     set_fs(old_fs);
 
 	return ret;
+}
+
+static ssize_t send_msg(struct file *file, const char __user *buf, size_t count, loff_t *data)
+{
+//call when user is writing to this device
+	char msg[BUF_SIZE];
+	if(copy_from_user(msg, buf, count))
+		return -ENOMEM;
+	ksend(sockfd_cli, msg, count, 0);
+
+	return count;
+
 }
 
 ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp )

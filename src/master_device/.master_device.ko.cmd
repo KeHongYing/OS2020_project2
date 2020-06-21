@@ -1,1 +1,0 @@
-cmd_/home/chiachia/OS2020_project2/src/master_device/master_device.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/chiachia/OS2020_project2/src/master_device/master_device.ko /home/chiachia/OS2020_project2/src/master_device/master_device.o /home/chiachia/OS2020_project2/src/master_device/master_device.mod.o ;  true

@@ -42,6 +42,7 @@ extern int kbind(ksocket_t socket, struct sockaddr *address, int address_len);
 extern int klisten(ksocket_t socket, int backlog);
 extern ksocket_t kaccept(ksocket_t socket, struct sockaddr *address, int *address_len);
 extern ssize_t ksend(ksocket_t socket, const void *buffer, size_t length, int flags);
+extern ssize_t krecv(ksocket_t socket, void *buffer, size_t length, int flags);
 extern int kclose(ksocket_t socket);
 extern char *inet_ntoa(struct in_addr *in);//DO NOT forget to kfree the return pointer
 
@@ -52,6 +53,7 @@ int master_close(struct inode *inode, struct file *filp);
 int master_open(struct inode *inode, struct file *filp);
 static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param);
 static ssize_t send_msg(struct file *file, const char __user *buf, size_t count, loff_t *data);//use when user is writing to this device
+ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp);
 
 static ksocket_t sockfd_srv, sockfd_cli;//socket for master and socket for slave
 static struct sockaddr_in addr_srv;//address for master
@@ -102,6 +104,7 @@ static struct file_operations master_fops = {
 	.unlocked_ioctl = master_ioctl,
 	.open = master_open,
 	.write = send_msg,
+	.read = receive_msg,
 	.release = master_close,
 	.mmap = my_mmap
 };
@@ -189,7 +192,6 @@ int master_open(struct inode *inode, struct file *filp)
 static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 {
 	long ret = -EINVAL;
-	size_t data_size = 0, offset = 0;
 	char *tmp;
 	pgd_t *pgd;
 	p4d_t *p4d;
@@ -214,10 +216,10 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			kfree(tmp);
 			ret = 0;
 			break;
-		case master_IOCTL_MMAP:
-			ksend(sockfd_cli, file->private_data, ioctl_param, 0);
-			ret = 0;
+		case master_IOCTL_MMAP: {
+			ret = ksend(sockfd_cli, file->private_data, ioctl_param, 0);
 			break;
+		}
 		case master_IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
@@ -233,7 +235,7 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			pmd = pmd_offset(pud, ioctl_param);
 			ptep = pte_offset_kernel(pmd , ioctl_param);
 			pte = *ptep;
-			printk("master: %lX\n", pte);
+			printk("master: %llu\n", pte);
 			ret = 0;
 			break;
 	}
@@ -252,6 +254,17 @@ static ssize_t send_msg(struct file *file, const char __user *buf, size_t count,
 
 	return count;
 
+}
+
+ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp )
+{
+//call when user is reading from this device
+	char msg[BUF_SIZE];
+	size_t len;
+	len = krecv(sockfd_cli, msg, sizeof(msg), 0);
+	if(copy_to_user(buf, msg, len))
+		return -ENOMEM;
+	return len;
 }
 
 module_init(master_init);
