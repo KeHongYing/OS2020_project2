@@ -8,8 +8,9 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('input_dir')
 	parser.add_argument('output_dir')
-	parser.add_argument('-ty', '--type', help = 'dafault: %(default)s', default = 'mmap')
-	parser.add_argument('-ti', '--time', help = 'dafault: %(default)s', default = 100, type = int)
+	parser.add_argument('-mt', '--master_type', help = 'dafault: %(default)s', default = 'mmap')
+	parser.add_argument('-st', '--slave_type', help = 'dafault: %(default)s', default = 'mmap')
+	parser.add_argument('-t', '--time', help = 'dafault: %(default)s', default = 100, type = int)
 	parser.add_argument('-ml', '--master_log', help = 'dafault: %(default)s', default = 'master_log')
 	parser.add_argument('-sl', '--slave_log', help = 'dafault: %(default)s', default = 'slave_log')
 	args = parser.parse_args()
@@ -28,8 +29,8 @@ if __name__ == '__main__':
 
 	master_files = str(len(files)) + ' ' + ' '.join([os.path.join(args.input_dir, f) for f in files])
 	slave_files = str(len(files)) + ' ' + ' '.join([os.path.join(args.output_dir, f) for f in files])
-	master_exec = './src/user_program/master ' + master_files + ' ' + args.type + ' >> ' + args.master_log
-	slave_exec = './src/user_program/slave ' + slave_files + ' ' + args.type + ' 127.0.0.1 >> ' + args.slave_log
+	master_exec = './src/user_program/master ' + master_files + ' ' + args.master_type + ' >> ' + args.master_log
+	slave_exec = './src/user_program/slave ' + slave_files + ' ' + args.slave_type + ' 127.0.0.1 >> ' + args.slave_log
 	total_exec = master_exec + ' & ' + slave_exec
 	print(total_exec)
 
