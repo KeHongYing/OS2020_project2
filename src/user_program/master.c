@@ -10,15 +10,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <errno.h>
-
-#define PAGE_SIZE 4096
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
-
-#define IOCTL_CREATESOCK 0x12345677
-#define IOCTL_MMAP 0x12345678
-#define IOCTL_EXIT 0x12345679
-#define IOCTL_OTHER 0x12345680
+#include "../define.h"
 
 size_t get_filesize(const char* filename);//get the size of the input file
 void err_sys(const char *x);
@@ -42,9 +34,9 @@ int main (int argc, char* argv[])
 		err_sys("ioclt server create socket error\n");
 
 	for(int i = 0; i < n; i ++){
-		char buf[BUF_SIZE], file_name[50];
+		char buf[BUF_SIZE], file_name[128];
 		int ret, file_fd;
-		size_t offset = 0, file_size;
+		size_t offset = 0, file_size = 0;
 
 		strcpy(file_name, argv[i + 2]);
 		gettimeofday(&start ,NULL);
@@ -90,12 +82,13 @@ int main (int argc, char* argv[])
 					munmap(kernel_address, len);
 				}
 				
-				ioctl(dev_fd, IOCTL_OTHER, (unsigned long)file_address);
+				ioctl(dev_fd, IOCTL_DEFAULT, (unsigned long)file_address);
 				break;
 			}
 		}
 
-		if(read(dev_fd, buf, sizeof(buf)) < 0)
+		int finish;
+		if(read(dev_fd, &finish, sizeof(int)) < 0)
 			err_sys("master finish error\n");
 		
 		gettimeofday(&end, NULL);
@@ -105,7 +98,7 @@ int main (int argc, char* argv[])
 		close(file_fd);
 	}
 
-	if(ioctl(dev_fd, IOCTL_EXIT ) == -1) // end sending data, close the connection
+	if(ioctl(dev_fd, IOCTL_EXIT) == -1) // end sending data, close the connection
 		err_sys("ioclt server exits error\n");
 	
 	close(dev_fd);

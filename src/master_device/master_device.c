@@ -20,17 +20,7 @@
 #include <linux/mm.h>
 #include <asm/page.h>
 #include <asm/pgtable.h>
-
-#ifndef VM_RESERVED
-#define VM_RESERVED   (VM_DONTEXPAND | VM_DONTDUMP)
-#endif
-
-#define DEFAULT_PORT 2325
-#define master_IOCTL_CREATESOCK 0x12345677
-#define master_IOCTL_MMAP 0x12345678
-#define master_IOCTL_EXIT 0x12345679
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
+#include "../define.h"
 
 typedef struct socket * ksocket_t;
 
@@ -201,7 +191,7 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
 	switch(ioctl_num){
-		case master_IOCTL_CREATESOCK:// create socket and accept a connection
+		case IOCTL_CREATESOCK:// create socket and accept a connection
 			sockfd_cli = kaccept(sockfd_srv, (struct sockaddr *)&addr_cli, &addr_len);
 			if (sockfd_cli == NULL)
 			{
@@ -216,11 +206,11 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			kfree(tmp);
 			ret = 0;
 			break;
-		case master_IOCTL_MMAP: {
+		case IOCTL_MMAP: {
 			ret = ksend(sockfd_cli, file->private_data, ioctl_param, 0);
 			break;
 		}
-		case master_IOCTL_EXIT:
+		case IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
 				printk("kclose cli error\n");
@@ -261,7 +251,7 @@ ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp )
 //call when user is reading from this device
 	char msg[BUF_SIZE];
 	size_t len;
-	len = krecv(sockfd_cli, msg, sizeof(msg), 0);
+	len = krecv(sockfd_cli, msg, count, MSG_WAITALL);
 	if(copy_to_user(buf, msg, len))
 		return -ENOMEM;
 	return len;

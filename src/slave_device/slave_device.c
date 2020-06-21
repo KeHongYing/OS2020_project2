@@ -19,18 +19,7 @@
 #include <linux/debugfs.h>
 #include <linux/mm.h>
 #include <asm/page.h>
-
-#ifndef VM_RESERVED
-#define VM_RESERVED   (VM_DONTEXPAND | VM_DONTDUMP)
-#endif
-
-#define slave_IOCTL_CREATESOCK 0x12345677
-#define slave_IOCTL_MMAP 0x12345678
-#define slave_IOCTL_EXIT 0x12345679
-
-
-#define BUF_SIZE 512
-#define MMAP_SIZE 4096
+#include "../define.h"
 
 struct dentry  *file1;//debug file
 
@@ -177,7 +166,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
     printk("slave device ioctl");
 
 	switch(ioctl_num){
-		case slave_IOCTL_CREATESOCK:// create socket and connect to master
+		case IOCTL_CREATESOCK:// create socket and connect to master
             printk("slave device ioctl create socket");
 
 			if(copy_from_user(ip, (char*)ioctl_param, sizeof(ip)))
@@ -209,7 +198,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			printk("kfree(tmp)");
 			ret = 0;
 			break;
-		case slave_IOCTL_MMAP:
+		case IOCTL_MMAP:
 			printk("slave device ioctl mmap");
 			size_t remain_size = ioctl_param;
 
@@ -228,7 +217,7 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 
 			ret = data_size;
 			break;
-		case slave_IOCTL_EXIT:
+		case IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
 				printk("kclose cli error\n");
@@ -264,12 +253,12 @@ static ssize_t send_msg(struct file *file, const char __user *buf, size_t count,
 
 }
 
-ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp )
+ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp)
 {
 //call when user is reading from this device
 	char msg[BUF_SIZE];
 	size_t len;
-	len = krecv(sockfd_cli, msg, sizeof(msg), 0);
+	len = krecv(sockfd_cli, msg, count, MSG_WAITALL);
 	if(copy_to_user(buf, msg, len))
 		return -ENOMEM;
 	return len;
