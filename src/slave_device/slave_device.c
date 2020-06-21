@@ -203,13 +203,10 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			size_t remain_size = ioctl_param;
 
 			while(1){
-				if(ioctl_param <= 0)
-					break;
-				len = krecv(sockfd_cli, buf, remain_size < sizeof(buf) ? remain_size : sizeof(buf), MSG_WAITALL);
+				len = krecv(sockfd_cli, buf, remain_size < BUF_SIZE ? remain_size : BUF_SIZE, MSG_WAITALL);
 				memcpy(file -> private_data + data_size, buf, len);
 				data_size += len;
 				remain_size -= len;
-				printk("data_size %d\n", data_size);
 				if(remain_size <= 0){
 					break;
 				}
