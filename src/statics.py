@@ -50,7 +50,8 @@ if __name__ == '__main__':
 		lines = f.readlines()
 		slave_times = np.array([float(line.strip().split(' ')[2]) for line in lines if 'ioctl success' not in line])
 		slave_filesizes = np.array([int(line.strip().split(' ')[-2]) for line in lines if 'ioctl success' not in line])
-
+	
+	print('file amount:', len(files))
 	print('diff_mean(ms):', np.mean(np.abs(master_times - slave_times)))
 	print('diff_std(ms):', np.std(np.abs(master_times - slave_times)))
 	print('master_mean(ms):', np.mean(master_times))
