@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 		{
 			case 'f'://fcntl : read()/write()
 				while(data_size < file_size){
-					if((ret = read(dev_fd, buf, file_size - data_size < sizeof(buf) ? file_size - data_size : sizeof(buf))) < 0) // read from the the device
+					if((ret = read(dev_fd, buf, file_size - data_size < BUF_SIZE ? file_size - data_size : BUF_SIZE)) < 0) // read from the the device
 						err_sys("read file error\n");
 					write(file_fd, buf, ret); //write to the input file
 					data_size += ret;
@@ -69,9 +69,6 @@ int main(int argc, char** argv)
 					if((ret = ioctl(dev_fd, IOCTL_MMAP, file_size - data_size < MMAP_SIZE ? file_size - data_size : MMAP_SIZE)) < 0)
 						err_sys("slave ioctl mmap failed\n");
 					
-					if(file_size < data_size + ret) // The last read
-						ret = file_size - data_size;
-				
 					posix_fallocate(file_fd, data_size, ret);
 					file_address = mmap(NULL, ret, PROT_WRITE, MAP_SHARED, file_fd, data_size);
 					kernel_address = mmap(NULL, ret, PROT_READ, MAP_SHARED, dev_fd, 0);

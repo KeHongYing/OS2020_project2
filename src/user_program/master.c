@@ -58,19 +58,17 @@ int main (int argc, char* argv[])
 				//fprintf(stderr, "in switch f\n");
 				while(offset < file_size)
 				{
-					if((ret = read(file_fd, buf, sizeof(buf))) < 0) // read from the input file
+					if((ret = read(file_fd, buf, BUF_SIZE)) < 0) // read from the input file
 						err_sys("read file error\n");
 
 					write(dev_fd, buf, ret);//write to the the device
 					offset += ret;
-					//fprintf(stderr, buf);
 				}
 				break;
 			}
 
 			case 'm': {//mmap
 				while(offset < file_size){
-					// printf("offset: %ld\n", offset);
 					size_t len = (file_size - offset < MMAP_SIZE) ? (file_size - offset) : MMAP_SIZE;
 					file_address = mmap(NULL, len, PROT_READ, MAP_SHARED, file_fd, offset);
 					kernel_address = mmap(NULL, len, PROT_WRITE, MAP_SHARED, dev_fd, offset);
