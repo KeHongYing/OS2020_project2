@@ -87,9 +87,9 @@ int main (int argc, char* argv[])
 			}
 		}
 
-		int finish;
-		if(read(dev_fd, &finish, sizeof(int)) < 0)
-			err_sys("master finish error\n");
+		//int finish;
+		//if(read(dev_fd, &finish, sizeof(int)) < 0)
+		//	err_sys("master finish error\n");
 		
 		gettimeofday(&end, NULL);
 		trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.0001;

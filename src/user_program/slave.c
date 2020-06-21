@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		write(dev_fd, &n, sizeof(int));
+		//write(dev_fd, &n, sizeof(int));
 
 		gettimeofday(&end, NULL);
 		trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.0001;
