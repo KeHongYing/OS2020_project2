@@ -24,6 +24,7 @@ int main (int argc, char* argv[])
 	struct timeval end;
 	double trans_time; //calulate the time between the device is opened and it is closed
 	int n = atoi(argv[1]);
+	size_t total_size = 0;
 	
 	strcpy(method, argv[argc - 1]);
 
@@ -32,6 +33,8 @@ int main (int argc, char* argv[])
 
 	if(ioctl(dev_fd, IOCTL_CREATESOCK) == -1) //IOCTL_CREATESOCK  : create socket and accept the connection from the slave
 		err_sys("ioclt server create socket error\n");
+	
+	gettimeofday(&start ,NULL);
 
 	for(int i = 0; i < n; i ++){
 		char buf[BUF_SIZE], file_name[128];
@@ -39,7 +42,6 @@ int main (int argc, char* argv[])
 		size_t offset = 0, file_size = 0;
 
 		strcpy(file_name, argv[i + 2]);
-		gettimeofday(&start ,NULL);
 		
 		if((file_fd = open(file_name, O_RDWR)) < 0)
 			err_sys("failed to open input file\n");
@@ -48,6 +50,7 @@ int main (int argc, char* argv[])
 			err_sys("failed to get filesize\n");
 		
 		write(dev_fd, &file_size, sizeof(size_t));
+		total_size += file_size;
 	
 		switch(method[0])
 		{
@@ -91,12 +94,12 @@ int main (int argc, char* argv[])
 		//if(read(dev_fd, &finish, sizeof(int)) < 0)
 		//	err_sys("master finish error\n");
 		
-		gettimeofday(&end, NULL);
-		trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.0001;
-		printf("Transmission time: %lf ms, File size: %lu bytes\n", trans_time, file_size);
-
 		close(file_fd);
 	}
+
+	gettimeofday(&end, NULL);
+	trans_time = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) * 0.001;
+	printf("Transmission time: %lf ms, File size: %lu bytes\n", trans_time, total_size);
 
 	if(ioctl(dev_fd, IOCTL_EXIT) == -1) // end sending data, close the connection
 		err_sys("ioclt server exits error\n");
