@@ -48,48 +48,48 @@ static ksocket_t sockfd_cli;//socket to the master server
 static struct sockaddr_in addr_srv; //address of the master server
 
 void mmap_open(struct vm_area_struct *vma){
-    return;
+	return;
 }
 
 void mmap_close(struct vm_area_struct *vma){
-    return;
+	return;
 }
 
 static int mmap_fault(struct vm_fault *vmf)
 {
-    vmf->page = virt_to_page(vmf->vma->vm_private_data);
+	vmf->page = virt_to_page(vmf->vma->vm_private_data);
 	get_page(vmf->page);
 	printk(KERN_INFO "slave page fault handled");
-    return 0;
+	return 0;
 }
 
 static struct vm_operations_struct my_vm_ops = {
-    .open = mmap_open,
-    .close = mmap_close,
-    .fault = mmap_fault
+	.open = mmap_open,
+	.close = mmap_close,
+	.fault = mmap_fault
 };
 
 static int my_mmap(struct file *filp, struct vm_area_struct *vma)
 {   
-    unsigned long pfn = virt_to_phys(filp->private_data) >> PAGE_SHIFT;
-    if( remap_pfn_range( vma,
-                         vma->vm_start,
-                         pfn,
-                         vma->vm_end - vma->vm_start,
-                         vma->vm_page_prot) )
-    {
-        printk(KERN_INFO "slave device remap failed\n");
-        return -1;
-    }
+	unsigned long pfn = virt_to_phys(filp->private_data) >> PAGE_SHIFT;
+	if( remap_pfn_range( vma,
+						 vma->vm_start,
+						 pfn,
+						 vma->vm_end - vma->vm_start,
+						 vma->vm_page_prot) )
+	{
+		printk(KERN_INFO "slave device remap failed\n");
+		return -1;
+	}
 
-    vma->vm_private_data = filp->private_data;
-    vma->vm_ops = &my_vm_ops;
-    vma->vm_flags |= VM_RESERVED;
-    mmap_open(vma);
+	vma->vm_private_data = filp->private_data;
+	vma->vm_ops = &my_vm_ops;
+	vma->vm_flags |= VM_RESERVED;
+	mmap_open(vma);
 	
 	printk(KERN_INFO "slave my_mmap executed\n");
 
-    return 0;
+	return 0;
 }
 
 //file operations
@@ -155,19 +155,19 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 	size_t len, data_size = 0;
 	char *tmp, ip[20], buf[BUF_SIZE];
 
-    pgd_t *pgd;
+	pgd_t *pgd;
 	p4d_t *p4d;
 	pud_t *pud;
 	pmd_t *pmd;
-    pte_t *ptep, pte;
+	pte_t *ptep, pte;
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
 
-    printk("slave device ioctl");
+	printk("slave device ioctl");
 
 	switch(ioctl_num){
 		case IOCTL_CREATESOCK:// create socket and connect to master
-            printk("slave device ioctl create socket");
+			printk("slave device ioctl create socket");
 
 			if(copy_from_user(ip, (char*)ioctl_param, sizeof(ip)))
 				return -ENOMEM;
@@ -198,22 +198,20 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			printk("kfree(tmp)");
 			ret = 0;
 			break;
-		case IOCTL_MMAP:
+		case IOCTL_MMAP: {
 			printk("slave device ioctl mmap");
 			size_t remain_size = ioctl_param;
 
-			while(1){
+			while(remain_size){
 				len = krecv(sockfd_cli, buf, remain_size < BUF_SIZE ? remain_size : BUF_SIZE, MSG_WAITALL);
 				memcpy(file -> private_data + data_size, buf, len);
 				data_size += len;
 				remain_size -= len;
-				if(remain_size <= 0){
-					break;
-				}
 			}
 
 			ret = data_size;
 			break;
+		}
 		case IOCTL_EXIT:
 			if(kclose(sockfd_cli) == -1)
 			{
@@ -223,17 +221,17 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			ret = 0;
 			break;
 		default:
-            pgd = pgd_offset(current->mm, ioctl_param);
+			pgd = pgd_offset(current->mm, ioctl_param);
 			p4d = p4d_offset(pgd, ioctl_param);
 			pud = pud_offset(p4d, ioctl_param);
 			pmd = pmd_offset(pud, ioctl_param);
 			ptep = pte_offset_kernel(pmd , ioctl_param);
 			pte = *ptep;
-			printk("slave: %llu\n", pte);
+			printk("slave: %lX\n", pte);
 			ret = 0;
 			break;
 	}
-    set_fs(old_fs);
+	set_fs(old_fs);
 
 	return ret;
 }
@@ -247,7 +245,6 @@ static ssize_t send_msg(struct file *file, const char __user *buf, size_t count,
 	ksend(sockfd_cli, msg, count, 0);
 
 	return count;
-
 }
 
 ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp)
@@ -260,9 +257,6 @@ ssize_t receive_msg(struct file *filp, char *buf, size_t count, loff_t *offp)
 		return -ENOMEM;
 	return len;
 }
-
-
-
 
 module_init(slave_init);
 module_exit(slave_exit);
