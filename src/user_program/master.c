@@ -87,11 +87,11 @@ int main (int argc, char* argv[])
 						return 1;
 					}
 
+					ioctl(dev_fd, IOCTL_DEFAULT, (unsigned long)file_address);
 					munmap(file_address, len);
 					munmap(kernel_address, len);
 				}
 				
-				ioctl(dev_fd, IOCTL_DEFAULT, (unsigned long)file_address);
 				break;
 		}
 

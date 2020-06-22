@@ -83,12 +83,12 @@ int main(int argc, char** argv)
 					kernel_address = mmap(NULL, ret, PROT_READ, MAP_SHARED, dev_fd, 0);
 					memcpy(file_address, kernel_address, ret);
 					data_size += ret;
+					if(ioctl(dev_fd, IOCTL_DEFAULT, kernel_address) == -1){
+						perror("slave ioctl print page decriptor failed");
+						return 1;
+					}
 					munmap(file_address, ret);
 					munmap(kernel_address, ret);
-				}
-				if(ioctl(dev_fd, IOCTL_DEFAULT, kernel_address) == -1){
-					perror("slave ioctl print page decriptor failed");
-					return 1;
 				}
 				break;
 		}
