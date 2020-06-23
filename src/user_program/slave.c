@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	if(ioctl(dev_fd, IOCTL_CREATESOCK, ip) == -1)	//0x12345677 : connect to master in the device
 		err_sys("ioclt create slave socket error\n");
 
-	write(1, "ioctl success\n", 14);
+	//write(1, "ioctl success\n", 14);
 	
 	gettimeofday(&start, NULL);
 
