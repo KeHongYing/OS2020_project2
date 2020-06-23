@@ -1,2 +1,1 @@
-ioctl success
-Transmission time: 44.326000 ms, File size: 12022885 bytes
+Transmission time: 42.230000 ms, File size: 12022885 bytes

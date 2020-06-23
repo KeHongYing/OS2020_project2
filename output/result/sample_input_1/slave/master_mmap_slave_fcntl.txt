@@ -1,11 +1,1 @@
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-ioctl success
-Transmission time: 4.815000 ms, File size: 24146 bytes
+Transmission time: 5.006000 ms, File size: 24146 bytes
