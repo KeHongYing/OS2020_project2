@@ -15,7 +15,7 @@ The following instrctions are using our own script to excute.
 - numpy
 - tqdm
 
-## Excution
+## Execution
 ```powershell
 pip install -r src/requirement.txt
 cd src
