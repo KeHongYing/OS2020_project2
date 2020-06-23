@@ -222,12 +222,37 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			break;
 		default:
 			pgd = pgd_offset(current->mm, ioctl_param);
+			if(pgd_none(*pgd)){
+				printk("not mapped in pgd\n");
+				return -1;
+			}
+
 			p4d = p4d_offset(pgd, ioctl_param);
+			if(p4d_none(*p4d)){
+				printk("not mapped in p4d\n");
+				return -1;
+			}
+
 			pud = pud_offset(p4d, ioctl_param);
+			if(pud_none(*pud)){
+				printk("not mapped in pud\n");
+				return -1;
+			}
+
 			pmd = pmd_offset(pud, ioctl_param);
-			ptep = pte_offset_kernel(pmd , ioctl_param);
+			if(pmd_none(*pmd)){
+				printk("not mapped in pmd\n");
+				return -1;
+			}
+
+			ptep = pte_offset_kernel(pmd, ioctl_param);
+			if(pte_none(*ptep)){
+				printk("not mapped in ptep\n");
+				return -1;
+			}
+
 			pte = *ptep;
-			printk("slave: %lX\n", pte);
+			printk("slave : %lx (descriptor)\n", pte);
 			ret = 0;
 			break;
 	}

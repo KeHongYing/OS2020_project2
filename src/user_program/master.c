@@ -78,12 +78,14 @@ int main (int argc, char* argv[])
 							
 					if(ioctl(dev_fd, IOCTL_MMAP, len) == -1)
 						err_sys("master ioctl mmap failed\n");
+				
+					if(ioctl(dev_fd, IOCTL_DEFAULT, file_address) == -1)
+						err_sys("master ioctl print page decriptor failed\n");
 
 					munmap(file_address, len);
 					munmap(kernel_address, len);
 				}
 				
-				ioctl(dev_fd, IOCTL_DEFAULT, (unsigned long)file_address);
 				break;
 			}
 		}
