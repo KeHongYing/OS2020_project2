@@ -17,14 +17,14 @@ The following instrctions are using our own script to excute.
 
 ## Excution
 ```powershell
-	pip install -r src/requirement.txt
-	cd src
-	sudo sh clean.sh
-	sudo sh compile.sh
-	cd ..
-	sudo python <input_file dir> <output_file dir> [-mt master_type] [-st slave_type] [-t times] [-ml master_log] [-sl slave_log]
+pip install -r src/requirement.txt
+cd src
+sudo sh clean.sh
+sudo sh compile.sh
+cd ..
+sudo python <input_file dir> <output_file dir> [-mt master_type] [-st slave_type] [-t times] [-ml master_log] [-sl slave_log]
 ```
 For example:
 ```powershell
-	sudo python sample_input/sample_input_1 received/sample_input_1 -mt mmap -st fcntl -t 100 -ml ./master_log -sl ./slave_log
+sudo python sample_input/sample_input_1 received/sample_input_1 -mt mmap -st fcntl -t 100 -ml ./master_log -sl ./slave_log
 ```
